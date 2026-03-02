@@ -1,0 +1,24 @@
+[
+    {
+        "model": "rareapi.category",
+        "pk": 1,
+        "fields": {
+            "label": "News"
+        }
+    },
+    {
+        "model": "rareapi.tag",
+        "pk": 1,
+        "fields": {
+            "label": "JavaScript"
+        }
+    },
+    {
+        "model": "rareapi.reaction",
+        "pk": 1,
+        "fields": {
+            "label": "happy",
+            "image_url": "https://pngtree.com/so/happy"
+        }
+    }
+]
