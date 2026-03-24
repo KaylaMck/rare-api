@@ -8,6 +8,27 @@ from rareapi.models import RareUser
 @api_view(['GET'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
+def profile_detail(request, pk):
+    try:
+        user = RareUser.objects.get(pk=pk)
+    except RareUser.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    data = {
+        'id': user.id,
+        'full_name': f'{user.first_name} {user.last_name}'.strip(),
+        'username': user.username,
+        'email': user.email,
+        'profile_image_url': user.profile_image_url,
+        'created_on': user.created_on.strftime('%m/%d/%Y'),
+        'user_type': 'Admin' if user.is_staff else 'Author',
+    }
+    return Response(data)
+
+
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
 def profile_list(request):
     if not request.user.is_staff:
         return Response({'error': 'Forbidden'}, status=403)
