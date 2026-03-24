@@ -17,3 +17,21 @@ def tags(request):
     if request.method == 'POST':
         new_tag = Tag.objects.create(label=request.data.get('label'))
         return Response({'id': new_tag.id, 'label': new_tag.label}, status=201)
+
+
+@api_view(['GET', 'PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def tag_detail(request, pk):
+    try:
+        tag = Tag.objects.get(pk=pk)
+    except Tag.DoesNotExist:
+        return Response({'error': 'Tag not found'}, status=404)
+
+    if request.method == 'GET':
+        return Response({'id': tag.id, 'label': tag.label})
+
+    if request.method == 'PUT':
+        tag.label = request.data.get('label', tag.label)
+        tag.save()
+        return Response({'id': tag.id, 'label': tag.label})

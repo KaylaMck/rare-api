@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import login_user, register_user, tags, post_list, post_detail, post_tags, category_list, category_detail, my_post_list
+from .views import login_user, register_user, tags, tag_detail, post_list, post_detail, post_tags, category_list, category_detail, my_post_list
 
 urlpatterns = [
     path('login', login_user, name='login'),
     path('register', register_user, name='register'),
     path('tags', tags, name='tags'),
+    path('tags/<int:pk>', tag_detail, name='tag_detail'),
     path('categories', category_list, name='category_list'),
     path('categories/<int:pk>', category_detail, name='category_detail'),
     path('posts', post_list, name='post_list'),
