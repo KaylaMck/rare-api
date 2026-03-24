@@ -18,7 +18,7 @@ def category_list(request):
     return Response(data)
 
 
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def category_detail(request, pk):
@@ -34,3 +34,7 @@ def category_detail(request, pk):
         category.label = request.data.get('label', category.label)
         category.save()
         return Response({'id': category.id, 'label': category.label})
+
+    if request.method == 'DELETE':
+        category.delete()
+        return Response(status=204)
