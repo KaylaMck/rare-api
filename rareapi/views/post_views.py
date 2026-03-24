@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rareapi.authentication import RareAuthentication
-from rareapi.models import Post, Tag, PostTag
+from rareapi.models import Post, Tag, PostTag, Category
 
 
 def serialize_post(post):
@@ -24,10 +24,27 @@ def serialize_post(post):
     }
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_list(request):
+    if request.method == 'POST':
+        try:
+            category = Category.objects.get(pk=request.data.get('category_id'))
+        except Category.DoesNotExist:
+            return Response({'error': 'Invalid category'}, status=400)
+
+        post = Post.objects.create(
+            user=request.user,
+            category=category,
+            title=request.data.get('title'),
+            content=request.data.get('content'),
+            image_url=request.data.get('image_url', ''),
+            publication_date=timezone.now().date(),
+            approved=True,
+        )
+        return Response(serialize_post(post), status=201)
+
     posts = (
         Post.objects
         .select_related('user', 'category')
