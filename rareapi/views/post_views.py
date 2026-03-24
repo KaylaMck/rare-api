@@ -64,7 +64,7 @@ def post_list(request):
     return Response(data)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_detail(request, pk):
@@ -72,6 +72,21 @@ def post_detail(request, pk):
         post = Post.objects.select_related('user', 'category').get(pk=pk)
     except Post.DoesNotExist:
         return Response({'error': 'Not found'}, status=404)
+
+    if request.method == 'PUT':
+        if post.user != request.user:
+            return Response({'error': 'Forbidden'}, status=403)
+
+        try:
+            category = Category.objects.get(pk=request.data.get('category_id'))
+        except Category.DoesNotExist:
+            return Response({'error': 'Invalid category'}, status=400)
+
+        post.title = request.data.get('title', post.title)
+        post.content = request.data.get('content', post.content)
+        post.image_url = request.data.get('image_url', post.image_url)
+        post.category = category
+        post.save()
 
     return Response(serialize_post(post))
 
