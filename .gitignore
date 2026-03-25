@@ -152,4 +152,10 @@ cython_debug/
 #.idea/
 *.sqlite3
 CLAUDE.md
-media/
+# Ignore all media files but keep the upload directories
+media/**
+!media/
+!media/post_images/
+!media/post_images/.gitkeep
+!media/profile_images/
+!media/profile_images/.gitkeep
