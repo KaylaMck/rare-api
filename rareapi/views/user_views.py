@@ -72,6 +72,14 @@ def deactivate_user(request, pk):
     except RareUser.DoesNotExist:
         return Response({'error': 'Not found'}, status=404)
 
+    if user.is_staff:
+        remaining_admins = RareUser.objects.filter(is_staff=True, active=True).exclude(pk=pk).count()
+        if remaining_admins == 0:
+            return Response(
+                {'error': 'Cannot deactivate the last admin. Make someone else an admin first.'},
+                status=400
+            )
+
     user.active = False
     user.save()
     return Response(status=204)
@@ -110,6 +118,13 @@ def change_user_type(request, pk):
     if user_type == 'Admin':
         user.is_staff = True
     elif user_type == 'Author':
+        if user.is_staff:
+            remaining_admins = RareUser.objects.filter(is_staff=True, active=True).exclude(pk=pk).count()
+            if remaining_admins == 0:
+                return Response(
+                    {'error': 'Cannot change the last admin to Author. Make someone else an admin first.'},
+                    status=400
+                )
         user.is_staff = False
     else:
         return Response({'error': 'Invalid user_type'}, status=400)
