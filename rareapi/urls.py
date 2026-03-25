@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import login_user, register_user, tags, tag_detail, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts
+from .views import login_user, register_user, tags, tag_detail, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item
 
 urlpatterns = [
     path('login', login_user, name='login'),
@@ -27,4 +27,6 @@ urlpatterns = [
     path('profiles/<int:author_id>/subscribe', subscribe, name='subscribe'),
     path('profiles/<int:author_id>/unsubscribe', unsubscribe, name='unsubscribe'),
     path('subscribedposts', subscribed_posts, name='subscribed_posts'),
+    path('demotionqueue', demotion_queue_list, name='demotion_queue_list'),
+    path('demotionqueue/<int:pk>', cancel_demotion_queue_item, name='cancel_demotion_queue_item'),
 ]

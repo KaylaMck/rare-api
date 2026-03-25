@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rareapi.authentication import RareAuthentication
-from rareapi.models import RareUser, Subscription
+from rareapi.models import RareUser, Subscription, DemotionQueue
 
 
 @api_view(['GET'])
@@ -73,12 +73,32 @@ def deactivate_user(request, pk):
         return Response({'error': 'Not found'}, status=404)
 
     if user.is_staff:
-        remaining_admins = RareUser.objects.filter(is_staff=True, active=True).exclude(pk=pk).count()
-        if remaining_admins == 0:
+        action = f"deactivate:{pk}"
+
+        if DemotionQueue.objects.filter(action=action, admin=request.user).exists():
             return Response(
-                {'error': 'Cannot deactivate the last admin. Make someone else an admin first.'},
+                {'error': 'You have already voted to deactivate this admin. A second admin must also approve.'},
                 status=400
             )
+
+        existing_votes = DemotionQueue.objects.filter(action=action)
+        if existing_votes.exists():
+            remaining_admins = RareUser.objects.filter(is_staff=True, active=True).exclude(pk=pk).count()
+            if remaining_admins == 0:
+                return Response(
+                    {'error': 'Cannot deactivate the last admin. Make someone else an admin first.'},
+                    status=400
+                )
+            existing_votes.delete()
+            user.active = False
+            user.save()
+            return Response(status=204)
+
+        DemotionQueue.objects.create(action=action, admin=request.user, approver_one=request.user)
+        return Response(
+            {'message': 'Deactivation request queued. A second admin must also approve to complete this action.'},
+            status=202
+        )
 
     user.active = False
     user.save()
@@ -117,17 +137,90 @@ def change_user_type(request, pk):
     user_type = request.data.get('user_type')
     if user_type == 'Admin':
         user.is_staff = True
+        user.save()
+        return Response(status=204)
     elif user_type == 'Author':
         if user.is_staff:
-            remaining_admins = RareUser.objects.filter(is_staff=True, active=True).exclude(pk=pk).count()
-            if remaining_admins == 0:
+            action = f"demote:{pk}"
+
+            if DemotionQueue.objects.filter(action=action, admin=request.user).exists():
                 return Response(
-                    {'error': 'Cannot change the last admin to Author. Make someone else an admin first.'},
+                    {'error': 'You have already voted to demote this admin. A second admin must also approve.'},
                     status=400
                 )
+
+            existing_votes = DemotionQueue.objects.filter(action=action)
+            if existing_votes.exists():
+                remaining_admins = RareUser.objects.filter(is_staff=True, active=True).exclude(pk=pk).count()
+                if remaining_admins == 0:
+                    return Response(
+                        {'error': 'Cannot change the last admin to Author. Make someone else an admin first.'},
+                        status=400
+                    )
+                existing_votes.delete()
+                user.is_staff = False
+                user.save()
+                return Response(status=204)
+
+            DemotionQueue.objects.create(action=action, admin=request.user, approver_one=request.user)
+            return Response(
+                {'message': 'Demotion request queued. A second admin must also approve to complete this action.'},
+                status=202
+            )
+
         user.is_staff = False
+        user.save()
+        return Response(status=204)
     else:
         return Response({'error': 'Invalid user_type'}, status=400)
 
-    user.save()
+
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def demotion_queue_list(request):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    queue_items = DemotionQueue.objects.select_related('admin').all()
+    data = []
+    for item in queue_items:
+        parts = item.action.split(':')
+        action_type = parts[0]
+        target_id = int(parts[1])
+        try:
+            target = RareUser.objects.get(pk=target_id)
+            target_username = target.username
+        except RareUser.DoesNotExist:
+            target_username = 'Unknown'
+
+        data.append({
+            'id': item.id,
+            'action': item.action,
+            'action_type': action_type,
+            'target_id': target_id,
+            'target_username': target_username,
+            'initiated_by_id': item.admin.id,
+            'initiated_by': item.admin.username,
+        })
+
+    return Response(data)
+
+
+@api_view(['DELETE'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def cancel_demotion_queue_item(request, pk):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    try:
+        item = DemotionQueue.objects.get(pk=pk)
+    except DemotionQueue.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    if item.admin != request.user:
+        return Response({'error': 'You can only cancel your own votes.'}, status=403)
+
+    item.delete()
     return Response(status=204)
