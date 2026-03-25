@@ -41,7 +41,7 @@ def post_list(request):
             content=request.data.get('content'),
             image_url=request.data.get('image_url', ''),
             publication_date=timezone.now().date(),
-            approved=True,
+            approved=request.user.is_staff,
         )
         return Response(serialize_post(post), status=201)
 
