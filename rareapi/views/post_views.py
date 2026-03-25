@@ -172,6 +172,49 @@ def subscribed_posts(request):
     return Response(data)
 
 
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def unapproved_post_list(request):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    posts = (
+        Post.objects
+        .select_related('user', 'category')
+        .filter(approved=False)
+        .order_by('-publication_date', '-id')
+    )
+    data = [
+        {
+            'id': post.id,
+            'title': post.title,
+            'publication_date': post.publication_date,
+            'user': {'id': post.user.id, 'username': post.user.username},
+            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
+        }
+        for post in posts
+    ]
+    return Response(data)
+
+
+@api_view(['PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def approve_post(request, pk):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    try:
+        post = Post.objects.select_related('user', 'category').get(pk=pk)
+    except Post.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    post.approved = True
+    post.save()
+    return Response(serialize_post(post))
+
+
 @api_view(['PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
