@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, upload_profile_image, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list, post_reaction_list, post_reaction_detail
+from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, upload_post_image, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, upload_profile_image, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list, post_reaction_list, post_reaction_detail
 
 urlpatterns = [
     path('login', login_user, name='login'),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('posts', post_list, name='post_list'),
     path('posts/<int:pk>', post_detail, name='post_detail'),
     path('posts/<int:pk>/tags', post_tags, name='post_tags'),
+    path('posts/<int:pk>/image', upload_post_image, name='upload_post_image'),
     path('posts/<int:pk>/approve', approve_post, name='approve_post'),
     path('posts/<int:pk>/unapprove', unapprove_post, name='unapprove_post'),
     path('unapprovedposts', unapproved_post_list, name='unapproved_post_list'),

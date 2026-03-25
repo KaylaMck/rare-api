@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
@@ -342,6 +344,40 @@ def search_posts(request):
         for post in posts
     ]
     return Response(data)
+
+
+@api_view(['PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_post_image(request, pk):
+    try:
+        post = Post.objects.get(pk=pk)
+    except Post.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    if post.user != request.user:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    if 'image' not in request.FILES:
+        return Response({'error': 'No image provided'}, status=400)
+
+    image = request.FILES['image']
+    filename = f"post_{pk}_{image.name}"
+    upload_dir = os.path.join(settings.MEDIA_ROOT, 'post_images')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, 'wb+') as dest:
+        for chunk in image.chunks():
+            dest.write(chunk)
+
+    relative_url = f"{settings.MEDIA_URL}post_images/{filename}"
+    absolute_url = request.build_absolute_uri(relative_url)
+
+    post.image_url = absolute_url
+    post.save()
+
+    return Response({'image_url': absolute_url})
 
 
 @api_view(['PUT'])
