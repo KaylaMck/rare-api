@@ -49,15 +49,16 @@ def comment_detail(request, pk):
     if request.method == 'GET':
         return Response(serialize_comment(comment))
 
-    if comment.author != request.user:
-        return Response({'error': 'Forbidden'}, status=403)
-
     if request.method == 'PUT':
+        if comment.author != request.user:
+            return Response({'error': 'Forbidden'}, status=403)
         comment.subject = request.data.get('subject', comment.subject)
         comment.content = request.data.get('content', comment.content)
         comment.save()
         return Response(serialize_comment(comment))
 
     if request.method == 'DELETE':
+        if comment.author != request.user and not request.user.is_staff:
+            return Response({'error': 'Forbidden'}, status=403)
         comment.delete()
         return Response(status=204)

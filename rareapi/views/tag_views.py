@@ -15,6 +15,8 @@ def tags(request):
         return Response(tag_list)
 
     if request.method == 'POST':
+        if not request.user.is_staff:
+            return Response({'error': 'Forbidden'}, status=403)
         new_tag = Tag.objects.create(label=request.data.get('label'))
         return Response({'id': new_tag.id, 'label': new_tag.label}, status=201)
 
@@ -32,10 +34,14 @@ def tag_detail(request, pk):
         return Response({'id': tag.id, 'label': tag.label})
 
     if request.method == 'PUT':
+        if not request.user.is_staff:
+            return Response({'error': 'Forbidden'}, status=403)
         tag.label = request.data.get('label', tag.label)
         tag.save()
         return Response({'id': tag.id, 'label': tag.label})
 
     if request.method == 'DELETE':
+        if not request.user.is_staff:
+            return Response({'error': 'Forbidden'}, status=403)
         tag.delete()
         return Response(status=204)

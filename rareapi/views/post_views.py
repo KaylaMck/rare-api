@@ -74,7 +74,7 @@ def post_detail(request, pk):
         return Response({'error': 'Not found'}, status=404)
 
     if request.method == 'DELETE':
-        if post.user != request.user:
+        if post.user != request.user and not request.user.is_staff:
             return Response({'error': 'Forbidden'}, status=403)
         post.delete()
         return Response(status=204)
