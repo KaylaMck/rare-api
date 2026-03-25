@@ -288,6 +288,36 @@ def category_post_list(request, category_id):
     return Response(data)
 
 
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def tag_post_list(request, tag_id):
+    try:
+        tag = Tag.objects.get(pk=tag_id)
+    except Tag.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    posts = (
+        Post.objects
+        .select_related('user', 'category')
+        .filter(post_tags__tag=tag, approved=True, publication_date__lte=timezone.now().date())
+        .order_by('-publication_date')
+    )
+    data = {
+        'tag': {'id': tag.id, 'label': tag.label},
+        'posts': [
+            {
+                'id': post.id,
+                'title': post.title,
+                'publication_date': post.publication_date,
+                'user': {'id': post.user.id, 'username': post.user.username},
+            }
+            for post in posts
+        ]
+    }
+    return Response(data)
+
+
 @api_view(['PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])

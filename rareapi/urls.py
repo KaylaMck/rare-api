@@ -1,11 +1,12 @@
 from django.urls import path
-from .views import login_user, register_user, tags, tag_detail, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item
+from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item
 
 urlpatterns = [
     path('login', login_user, name='login'),
     path('register', register_user, name='register'),
     path('tags', tags, name='tags'),
     path('tags/<int:pk>', tag_detail, name='tag_detail'),
+    path('tags/<int:tag_id>/posts', tag_post_list, name='tag_post_list'),
     path('categories', category_list, name='category_list'),
     path('categories/<int:pk>', category_detail, name='category_detail'),
     path('categories/<int:category_id>/posts', category_post_list, name='category_post_list'),
