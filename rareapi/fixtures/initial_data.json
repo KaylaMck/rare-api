@@ -16,7 +16,6 @@
     "bio": "Platform admin and tech enthusiast. I keep the lights on around here.",
     "profile_image_url": "",
     "created_on": "2025-06-15",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -38,7 +37,6 @@
     "bio": "Co-admin of Rare Publishing. Music producer by night, moderator by day.",
     "profile_image_url": "",
     "created_on": "2025-06-22",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -60,7 +58,6 @@
     "bio": "Full-stack developer writing about React, Python, and everything in between.",
     "profile_image_url": "",
     "created_on": "2025-06-29",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -82,7 +79,6 @@
     "bio": "Travel writer and amateur photographer. Currently exploring the Southeast.",
     "profile_image_url": "",
     "created_on": "2025-07-06",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -104,7 +100,6 @@
     "bio": "Home cook turned food blogger. Nashville hot chicken is my love language.",
     "profile_image_url": "",
     "created_on": "2025-07-13",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -126,7 +121,6 @@
     "bio": "Book reviewer and aspiring novelist. If I'm not reading, I'm probably napping.",
     "profile_image_url": "",
     "created_on": "2025-07-20",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -148,7 +142,6 @@
     "bio": "Personal trainer and wellness advocate. Let's get moving!",
     "profile_image_url": "",
     "created_on": "2025-07-27",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -170,7 +163,6 @@
     "bio": "Indie game developer and retro gaming collector. Currently obsessed with roguelikes.",
     "profile_image_url": "",
     "created_on": "2025-08-03",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -192,7 +184,6 @@
     "bio": "Environmental scientist blogging about sustainability and green living.",
     "profile_image_url": "",
     "created_on": "2025-08-10",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -214,7 +205,6 @@
     "bio": "Music journalist covering indie, jazz, and everything your algorithm won't recommend.",
     "profile_image_url": "",
     "created_on": "2025-08-17",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -236,7 +226,6 @@
     "bio": "Serial entrepreneur. Three startups in, still optimistic. Writing about the hustle.",
     "profile_image_url": "",
     "created_on": "2025-08-24",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }
@@ -258,7 +247,6 @@
     "bio": "Photographer and visual storyteller based in Nashville. Mostly landscapes and street.",
     "profile_image_url": "",
     "created_on": "2025-08-31",
-    "active": true,
     "groups": [],
     "user_permissions": []
   }

@@ -1,27 +1,26 @@
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rareapi.authentication import RareAuthentication
 from rareapi.models import Category
+from rareapi.serializers import CategorySerializer
 
 
 @api_view(['GET', 'POST'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def category_list(request):
     if request.method == 'POST':
         if not request.user.is_staff:
             return Response({'error': 'Forbidden'}, status=403)
-        category = Category.objects.create(label=request.data.get('label'))
-        return Response({'id': category.id, 'label': category.label}, status=201)
+        serializer = CategorySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=201)
 
     categories = Category.objects.order_by('label')
-    data = [{'id': c.id, 'label': c.label} for c in categories]
-    return Response(data)
+    return Response(CategorySerializer(categories, many=True).data)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def category_detail(request, pk):
     try:
@@ -30,14 +29,15 @@ def category_detail(request, pk):
         return Response({'error': 'Category not found'}, status=404)
 
     if request.method == 'GET':
-        return Response({'id': category.id, 'label': category.label})
+        return Response(CategorySerializer(category).data)
 
     if request.method == 'PUT':
         if not request.user.is_staff:
             return Response({'error': 'Forbidden'}, status=403)
-        category.label = request.data.get('label', category.label)
-        category.save()
-        return Response({'id': category.id, 'label': category.label})
+        serializer = CategorySerializer(category, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     if request.method == 'DELETE':
         if not request.user.is_staff:

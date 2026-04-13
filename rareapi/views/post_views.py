@@ -1,35 +1,22 @@
 import os
 from django.conf import settings
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rareapi.authentication import RareAuthentication
 from rareapi.models import Post, Tag, PostTag, Category
-
-
-def serialize_post(post):
-    tags = [
-        {'id': pt.tag.id, 'label': pt.tag.label}
-        for pt in post.post_tags.select_related('tag').all()
-    ]
-    return {
-        'id': post.id,
-        'title': post.title,
-        'content': post.content,
-        'publication_date': post.publication_date,
-        'image_url': post.image_url,
-        'approved': post.approved,
-        'user': {'id': post.user.id, 'username': post.user.username},
-        'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        'tags': tags,
-    }
+from rareapi.serializers import PostDetailSerializer, PostListSerializer, CategorySerializer, TagSerializer
 
 
 @api_view(['GET', 'POST'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_list(request):
+    """List approved posts (GET) or create a new post (POST).
+
+    Domain rule: on POST, the post's `approved` flag is set to the creator's
+    `is_staff` value. Admins' posts auto-publish; regular authors' posts enter
+    the moderation queue (visible via /unapprovedposts to admins only).
+    """
     if request.method == 'POST':
         try:
             category = Category.objects.get(pk=request.data.get('category_id'))
@@ -43,9 +30,9 @@ def post_list(request):
             content=request.data.get('content'),
             image_url=request.data.get('image_url', ''),
             publication_date=timezone.now().date(),
-            approved=request.user.is_staff,
+            approved=request.user.is_staff,  # see docstring — admins auto-publish
         )
-        return Response(serialize_post(post), status=201)
+        return Response(PostDetailSerializer(post).data, status=201)
 
     posts = (
         Post.objects
@@ -53,21 +40,10 @@ def post_list(request):
         .filter(approved=True, publication_date__lte=timezone.now().date())
         .order_by('-publication_date')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'user': {'id': post.user.id, 'username': post.user.username},
-            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_detail(request, pk):
     try:
@@ -96,11 +72,10 @@ def post_detail(request, pk):
         post.category = category
         post.save()
 
-    return Response(serialize_post(post))
+    return Response(PostDetailSerializer(post).data)
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def my_post_list(request):
     posts = (
@@ -109,22 +84,10 @@ def my_post_list(request):
         .filter(user=request.user)
         .order_by('-publication_date', '-id')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'approved': post.approved,
-            'user': {'id': post.user.id, 'username': post.user.username},
-            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def user_post_list(request, user_id):
     posts = (
@@ -133,21 +96,10 @@ def user_post_list(request, user_id):
         .filter(user_id=user_id, approved=True)
         .order_by('-publication_date', '-id')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'user': {'id': post.user.id, 'username': post.user.username},
-            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def subscribed_posts(request):
     subscribed_author_ids = request.user.subscriptions.filter(ended_on__isnull=True).values_list('author_id', flat=True)
@@ -161,21 +113,10 @@ def subscribed_posts(request):
         )
         .order_by('-publication_date')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'user': {'id': post.user.id, 'username': post.user.username},
-            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def unapproved_post_list(request):
     if not request.user.is_staff:
@@ -187,21 +128,10 @@ def unapproved_post_list(request):
         .filter(approved=False)
         .order_by('-publication_date', '-id')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'user': {'id': post.user.id, 'username': post.user.username},
-            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['PUT'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def approve_post(request, pk):
     if not request.user.is_staff:
@@ -214,11 +144,10 @@ def approve_post(request, pk):
 
     post.approved = True
     post.save()
-    return Response(serialize_post(post))
+    return Response(PostDetailSerializer(post).data)
 
 
 @api_view(['PUT'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def unapprove_post(request, pk):
     if not request.user.is_staff:
@@ -231,11 +160,10 @@ def unapprove_post(request, pk):
 
     post.approved = False
     post.save()
-    return Response(serialize_post(post))
+    return Response(PostDetailSerializer(post).data)
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def approved_post_list(request):
     if not request.user.is_staff:
@@ -247,21 +175,10 @@ def approved_post_list(request):
         .filter(approved=True)
         .order_by('-publication_date', '-id')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'user': {'id': post.user.id, 'username': post.user.username},
-            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def category_post_list(request, category_id):
     try:
@@ -275,23 +192,13 @@ def category_post_list(request, category_id):
         .filter(category=category, approved=True, publication_date__lte=timezone.now().date())
         .order_by('-publication_date')
     )
-    data = {
-        'category': {'id': category.id, 'label': category.label},
-        'posts': [
-            {
-                'id': post.id,
-                'title': post.title,
-                'publication_date': post.publication_date,
-                'user': {'id': post.user.id, 'username': post.user.username},
-            }
-            for post in posts
-        ]
-    }
-    return Response(data)
+    return Response({
+        'category': CategorySerializer(category).data,
+        'posts': PostListSerializer(posts, many=True).data,
+    })
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def tag_post_list(request, tag_id):
     try:
@@ -305,23 +212,13 @@ def tag_post_list(request, tag_id):
         .filter(post_tags__tag=tag, approved=True, publication_date__lte=timezone.now().date())
         .order_by('-publication_date')
     )
-    data = {
-        'tag': {'id': tag.id, 'label': tag.label},
-        'posts': [
-            {
-                'id': post.id,
-                'title': post.title,
-                'publication_date': post.publication_date,
-                'user': {'id': post.user.id, 'username': post.user.username},
-            }
-            for post in posts
-        ]
-    }
-    return Response(data)
+    return Response({
+        'tag': TagSerializer(tag).data,
+        'posts': PostListSerializer(posts, many=True).data,
+    })
 
 
 @api_view(['GET'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def search_posts(request):
     query = request.query_params.get('q', '').strip()
@@ -334,20 +231,10 @@ def search_posts(request):
         .filter(title__icontains=query, approved=True, publication_date__lte=timezone.now().date())
         .order_by('-publication_date')
     )
-    data = [
-        {
-            'id': post.id,
-            'title': post.title,
-            'publication_date': post.publication_date,
-            'user': {'id': post.user.id, 'username': post.user.username},
-        }
-        for post in posts
-    ]
-    return Response(data)
+    return Response(PostListSerializer(posts, many=True).data)
 
 
 @api_view(['PUT'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def upload_post_image(request, pk):
     try:
@@ -381,7 +268,6 @@ def upload_post_image(request, pk):
 
 
 @api_view(['PUT'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_tags(request, pk):
     try:
@@ -401,4 +287,4 @@ def post_tags(request, pk):
         except Tag.DoesNotExist:
             pass
 
-    return Response(serialize_post(post))
+    return Response(PostDetailSerializer(post).data)

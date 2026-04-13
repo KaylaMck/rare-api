@@ -12,6 +12,8 @@ pylint = "*"
 autopep8 = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-django = "*"
 
 [requires]
 python_version = "*"

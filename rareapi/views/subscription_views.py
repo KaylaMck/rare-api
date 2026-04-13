@@ -1,13 +1,11 @@
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rareapi.authentication import RareAuthentication
 from rareapi.models import RareUser, Subscription
 
 
 @api_view(['POST'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def subscribe(request, author_id):
     try:
@@ -31,7 +29,6 @@ def subscribe(request, author_id):
 
 
 @api_view(['DELETE'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def unsubscribe(request, author_id):
     try:

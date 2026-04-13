@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'rareapi',
 ]
@@ -144,6 +145,6 @@ APPEND_SLASH = False
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rareapi.authentication.RareAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
 }

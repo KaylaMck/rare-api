@@ -1,15 +1,40 @@
 from django.urls import path
-from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, upload_post_image, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, upload_profile_image, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list, post_reaction_list, post_reaction_detail
+from .views.auth_views import login_user, register_user, me
+from .views.tag_views import tags, tag_detail
+from .views.post_views import (
+    post_list, post_detail, post_tags, upload_post_image,
+    approve_post, unapprove_post, unapproved_post_list, approved_post_list,
+    my_post_list, user_post_list, subscribed_posts,
+    category_post_list, tag_post_list, search_posts,
+)
+from .views.category_views import category_list, category_detail
+from .views.comment_views import post_comments, comment_detail
+from .views.user_views import (
+    profile_list, profile_detail, deactivate_user, reactivate_user,
+    change_user_type, upload_profile_image,
+    demotion_queue_list, cancel_demotion_queue_item,
+)
+from .views.subscription_views import subscribe, unsubscribe
+from .views.reaction_views import reaction_list, post_reaction_list, post_reaction_detail
+
 
 urlpatterns = [
+    # Auth
     path('login', login_user, name='login'),
     path('register', register_user, name='register'),
+    path('me', me, name='me'),
+
+    # Tags
     path('tags', tags, name='tags'),
     path('tags/<int:pk>', tag_detail, name='tag_detail'),
     path('tags/<int:tag_id>/posts', tag_post_list, name='tag_post_list'),
+
+    # Categories
     path('categories', category_list, name='category_list'),
     path('categories/<int:pk>', category_detail, name='category_detail'),
     path('categories/<int:category_id>/posts', category_post_list, name='category_post_list'),
+
+    # Posts
     path('posts/search', search_posts, name='search_posts'),
     path('posts', post_list, name='post_list'),
     path('posts/<int:pk>', post_detail, name='post_detail'),
@@ -20,8 +45,13 @@ urlpatterns = [
     path('unapprovedposts', unapproved_post_list, name='unapproved_post_list'),
     path('approvedposts', approved_post_list, name='approved_post_list'),
     path('myposts', my_post_list, name='my_post_list'),
+    path('subscribedposts', subscribed_posts, name='subscribed_posts'),
+
+    # Comments
     path('posts/<int:pk>/comments', post_comments, name='post_comments'),
     path('comments/<int:pk>', comment_detail, name='comment_detail'),
+
+    # Profiles
     path('profiles', profile_list, name='profile_list'),
     path('profiles/<int:pk>', profile_detail, name='profile_detail'),
     path('profiles/<int:pk>/image', upload_profile_image, name='upload_profile_image'),
@@ -31,9 +61,12 @@ urlpatterns = [
     path('profiles/<int:user_id>/posts', user_post_list, name='user_post_list'),
     path('profiles/<int:author_id>/subscribe', subscribe, name='subscribe'),
     path('profiles/<int:author_id>/unsubscribe', unsubscribe, name='unsubscribe'),
-    path('subscribedposts', subscribed_posts, name='subscribed_posts'),
+
+    # Demotion queue (admin voting)
     path('demotionqueue', demotion_queue_list, name='demotion_queue_list'),
     path('demotionqueue/<int:pk>', cancel_demotion_queue_item, name='cancel_demotion_queue_item'),
+
+    # Reactions
     path('reactions', reaction_list, name='reaction_list'),
     path('posts/<int:pk>/reactions', post_reaction_list, name='post_reaction_list'),
     path('posts/<int:pk>/reactions/<int:reaction_id>', post_reaction_detail, name='post_reaction_detail'),

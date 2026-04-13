@@ -1,23 +1,11 @@
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rareapi.authentication import RareAuthentication
 from rareapi.models import Comment, Post
-
-
-def serialize_comment(comment):
-    return {
-        'id': comment.id,
-        'subject': comment.subject,
-        'content': comment.content,
-        'post': comment.post_id,
-        'author': {'id': comment.author.id, 'username': comment.author.username},
-        'created_on': comment.created_on,
-    }
+from rareapi.serializers import CommentSerializer
 
 
 @api_view(['GET', 'POST'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_comments(request, pk):
     try:
@@ -32,14 +20,13 @@ def post_comments(request, pk):
             subject=request.data.get('subject', ''),
             content=request.data.get('content', ''),
         )
-        return Response(serialize_comment(comment), status=201)
+        return Response(CommentSerializer(comment).data, status=201)
 
     comments = Comment.objects.select_related('author').filter(post=post)
-    return Response([serialize_comment(c) for c in comments])
+    return Response(CommentSerializer(comments, many=True).data)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def comment_detail(request, pk):
     try:
@@ -48,7 +35,7 @@ def comment_detail(request, pk):
         return Response({'error': 'Comment not found'}, status=404)
 
     if request.method == 'GET':
-        return Response(serialize_comment(comment))
+        return Response(CommentSerializer(comment).data)
 
     if request.method == 'PUT':
         if comment.author != request.user:
@@ -56,7 +43,7 @@ def comment_detail(request, pk):
         comment.subject = request.data.get('subject', comment.subject)
         comment.content = request.data.get('content', comment.content)
         comment.save()
-        return Response(serialize_comment(comment))
+        return Response(CommentSerializer(comment).data)
 
     if request.method == 'DELETE':
         if comment.author != request.user and not request.user.is_staff:
