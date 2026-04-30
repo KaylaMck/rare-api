@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from rareapi.models import RareUser
 
@@ -16,13 +17,14 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     user_type = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
     subscriber_count = serializers.SerializerMethodField()
+    post_count = serializers.SerializerMethodField()
 
     class Meta:
         model = RareUser
         fields = [
             'id', 'full_name', 'username', 'email',
             'profile_image_url', 'created_on', 'user_type',
-            'is_subscribed', 'subscriber_count',
+            'is_subscribed', 'subscriber_count', 'post_count',
         ]
 
     def get_full_name(self, obj):
@@ -41,6 +43,9 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
 
     def get_subscriber_count(self, obj):
         return obj.subscribers.filter(ended_on__isnull=True).count()
+
+    def get_post_count(self, obj):
+        return obj.posts.filter(approved=True, publication_date__lte=timezone.now().date()).count()
 
 
 class ProfileListSerializer(serializers.ModelSerializer):
